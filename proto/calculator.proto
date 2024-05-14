@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = "github.com/mai-k304-web-sem-6/lab-23-rpc.git";
+
+package calculator;
+
+service Calculator {
+  rpc Sum (TwoRequest) returns (Response) {}
+  rpc Subtract (TwoRequest) returns (Response) {}
+  rpc Multiply (TwoRequest) returns (Response) {}
+  rpc Share (TwoRequest) returns (Response) {}
+  rpc Sqrt (OneRequest) returns (Response) {}
+  rpc Percent (TwoRequest) returns (Response) {}
+  rpc Round (TwoRequest) returns (Response) {}
+  rpc Exponentiation (TwoRequest) returns (Response) {}
+}
+
+message OneRequest {
+  float a = 1;
+}
+
+message TwoRequest {
+  float a = 1;
+  float b = 2;
+}
+
+message Response {
+  float result = 1;
+}
