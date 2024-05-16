@@ -30,6 +30,7 @@ type CalculatorClient interface {
 	Percent(ctx context.Context, in *TwoRequest, opts ...grpc.CallOption) (*Response, error)
 	Round(ctx context.Context, in *TwoRequest, opts ...grpc.CallOption) (*Response, error)
 	Exponentiation(ctx context.Context, in *TwoRequest, opts ...grpc.CallOption) (*Response, error)
+	Calculate(ctx context.Context, in *CalculateRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
 type calculatorClient struct {
@@ -112,6 +113,15 @@ func (c *calculatorClient) Exponentiation(ctx context.Context, in *TwoRequest, o
 	return out, nil
 }
 
+func (c *calculatorClient) Calculate(ctx context.Context, in *CalculateRequest, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/calculator.Calculator/Calculate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CalculatorServer is the server API for Calculator service.
 // All implementations must embed UnimplementedCalculatorServer
 // for forward compatibility
@@ -124,6 +134,7 @@ type CalculatorServer interface {
 	Percent(context.Context, *TwoRequest) (*Response, error)
 	Round(context.Context, *TwoRequest) (*Response, error)
 	Exponentiation(context.Context, *TwoRequest) (*Response, error)
+	Calculate(context.Context, *CalculateRequest) (*Response, error)
 	mustEmbedUnimplementedCalculatorServer()
 }
 
@@ -154,6 +165,9 @@ func (UnimplementedCalculatorServer) Round(context.Context, *TwoRequest) (*Respo
 }
 func (UnimplementedCalculatorServer) Exponentiation(context.Context, *TwoRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Exponentiation not implemented")
+}
+func (UnimplementedCalculatorServer) Calculate(context.Context, *CalculateRequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Calculate not implemented")
 }
 func (UnimplementedCalculatorServer) mustEmbedUnimplementedCalculatorServer() {}
 
@@ -312,6 +326,24 @@ func _Calculator_Exponentiation_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Calculator_Calculate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CalculateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorServer).Calculate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/calculator.Calculator/Calculate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorServer).Calculate(ctx, req.(*CalculateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Calculator_ServiceDesc is the grpc.ServiceDesc for Calculator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -350,6 +382,10 @@ var Calculator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Exponentiation",
 			Handler:    _Calculator_Exponentiation_Handler,
+		},
+		{
+			MethodName: "Calculate",
+			Handler:    _Calculator_Calculate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

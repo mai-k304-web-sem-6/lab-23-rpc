@@ -10,6 +10,7 @@ import (
 	"log"
 	"math"
 	"net"
+	"strings"
 )
 
 var (
@@ -51,6 +52,78 @@ func (s *server) Round(ctx context.Context, in *pb.TwoRequest) (*pb.Response, er
 
 func (s *server) Exponentiation(ctx context.Context, in *pb.TwoRequest) (*pb.Response, error) {
 	return &pb.Response{Result: float32(math.Pow(float64(in.GetA()), float64(in.GetB())))}, nil
+}
+
+func (s *server) Calculate(ctx context.Context, in *pb.CalculateRequest) (*pb.Response, error) {
+	numbers := make([]float64, 0, len(in.GetNumbers()))
+	for i := 0; i < len(in.GetNumbers()); i++ {
+		numbers = append(numbers, float64(in.GetNumbers()[i]))
+	}
+	operations := strings.Split(in.GetOperations(), "")
+	for i := 0; len(operations) > i; {
+		switch operations[i] {
+		case "2":
+			res, _ := s.Sqrt(ctx, &pb.OneRequest{A: float32(numbers[i])})
+			numbers[i] = float64(res.Result)
+			operations = append(operations[:i], operations[i+1:]...)
+		default:
+			i++
+		}
+	}
+	for i := 0; len(operations) > i; {
+		switch operations[i] {
+		case "%":
+			res, _ := s.Percent(ctx, &pb.TwoRequest{A: float32(numbers[i]), B: float32(numbers[i+1])})
+			numbers[i+1] = float64(res.Result)
+			numbers = append(numbers[:i], numbers[i+1:]...)
+			operations = append(operations[:i], operations[i+1:]...)
+		case ":":
+			res, _ := s.Round(ctx, &pb.TwoRequest{A: float32(numbers[i]), B: float32(numbers[i+1])})
+			numbers[i+1] = float64(res.Result)
+			numbers = append(numbers[:i], numbers[i+1:]...)
+			operations = append(operations[:i], operations[i+1:]...)
+		case "^":
+			res, _ := s.Exponentiation(ctx, &pb.TwoRequest{A: float32(numbers[i]), B: float32(numbers[i+1])})
+			numbers[i+1] = float64(res.Result)
+			numbers = append(numbers[:i], numbers[i+1:]...)
+			operations = append(operations[:i], operations[i+1:]...)
+		default:
+			i++
+		}
+	}
+	for i := 0; len(operations) > i; {
+		switch operations[i] {
+		case "*":
+			res, _ := s.Multiply(ctx, &pb.TwoRequest{A: float32(numbers[i]), B: float32(numbers[i+1])})
+			numbers[i+1] = float64(res.Result)
+			numbers = append(numbers[:i], numbers[i+1:]...)
+			operations = append(operations[:i], operations[i+1:]...)
+		case "/":
+			res, _ := s.Share(ctx, &pb.TwoRequest{A: float32(numbers[i]), B: float32(numbers[i+1])})
+			numbers[i+1] = float64(res.Result)
+			numbers = append(numbers[:i], numbers[i+1:]...)
+			operations = append(operations[:i], operations[i+1:]...)
+		default:
+			i++
+		}
+	}
+	for i := 0; len(operations) > i; {
+		switch operations[i] {
+		case "+":
+			res, _ := s.Sum(ctx, &pb.TwoRequest{A: float32(numbers[i]), B: float32(numbers[i+1])})
+			numbers[i+1] = float64(res.Result)
+			numbers = append(numbers[:i], numbers[i+1:]...)
+			operations = append(operations[:i], operations[i+1:]...)
+		case "-":
+			res, _ := s.Subtract(ctx, &pb.TwoRequest{A: float32(numbers[i]), B: float32(numbers[i+1])})
+			numbers[i+1] = float64(res.Result)
+			numbers = append(numbers[:i], numbers[i+1:]...)
+			operations = append(operations[:i], operations[i+1:]...)
+		default:
+			i++
+		}
+	}
+	return &pb.Response{Result: float32(numbers[0])}, nil
 }
 
 func main() {

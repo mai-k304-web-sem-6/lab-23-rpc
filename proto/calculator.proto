@@ -13,6 +13,7 @@ service Calculator {
   rpc Percent (TwoRequest) returns (Response) {}
   rpc Round (TwoRequest) returns (Response) {}
   rpc Exponentiation (TwoRequest) returns (Response) {}
+  rpc Calculate (CalculateRequest) returns (Response) {}
 }
 
 message OneRequest {
@@ -22,6 +23,11 @@ message OneRequest {
 message TwoRequest {
   float a = 1;
   float b = 2;
+}
+
+message CalculateRequest {
+  repeated float numbers = 1;
+  string operations = 2;
 }
 
 message Response {
